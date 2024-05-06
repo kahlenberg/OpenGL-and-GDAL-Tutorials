@@ -24,8 +24,7 @@ public:
 	void render(glm::mat4& view, glm::mat4& projection);
 
 private:
-	
-	OGRDataSource* ds;
+	GDALDataset  *ds;
 	OGRSpatialReference* sr;
 	buffer vbo_geometry;
 	buffer elements;

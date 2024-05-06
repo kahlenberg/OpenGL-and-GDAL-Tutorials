@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 	else
 	{
 		cout << "INITIALIZED" << endl;
-		Terrain.SetFile(AssetManager::GetAppPath() + "../../data/drycreek.tif");
+		Terrain.SetFile(AssetManager::GetAppPath() + "/../../data/drycreek.tif");
 		Terrain.setup();
 		shap.load(AssetManager::GetAppPath() + "../../data/streamDCEW2/stream2.shp");
 		shap.createMesh(Terrain.GetProjection(),Terrain.GetOrigin(),glm::vec2(1,1),Terrain);

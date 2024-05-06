@@ -17,11 +17,11 @@ void shape::update(float dt)
 
 bool shape::load(string filename)
 {
-    OGRRegisterAll();
+   GDALAllRegister();
 
 
     // First open the shape file
-    ds = OGRSFDriverRegistrar::Open( filename.c_str(), FALSE );
+    ds = (GDALDataset *) GDALOpen(filename.c_str(), GA_ReadOnly);
 
     // Now to load in the points .....
     points = vector<vector<glm::vec2>>();

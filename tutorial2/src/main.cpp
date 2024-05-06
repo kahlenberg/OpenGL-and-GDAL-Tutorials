@@ -6,8 +6,6 @@
 
 #include <SDL2/SDL.h>
 
-
-
 #if defined(__APPLE__) || defined(MACOSX)
 #include <OpenGL/gl3.h>
 #include <OpenGL/GLU.h>
@@ -32,14 +30,13 @@
 #include <terrain.h>
 #include <gbuffer.h>
 #include <framerenderer.h>
-
+#include <filesystem>
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 using namespace std;
 using namespace chrono;
-
 
 float Vertices[9] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0};
 
@@ -82,7 +79,7 @@ bool init();
 bool initGL();
 
 //Input handler
-void handleKeys( unsigned char key, int x, int y )
+void handleKeys(unsigned char key, int x, int y)
 {};
 
 void HandleEvents(SDL_Event e, float dt = 0);
@@ -122,24 +119,20 @@ int main(int argc, char** argv)
 {
 	renderer Renderer = renderer();
 
-	string appPath = argv[0];
-	cout << argv[0] << endl;
-	appPath.erase(appPath.end() - 3, appPath.end());
-	// Lets set the application path for this guy
+	string appPath;
+	//Lets set the application path for this guy
 	AssetManager::SetAppPath(appPath);
-
-
 	current = high_resolution_clock::now();
 	high_resolution_clock::time_point past = high_resolution_clock::now();
 
 	//Start up SDL and create window
-	if ( !init() )
+	if (!init())
 	{
-		printf( "Failed to initialize!\n" );
+		printf("Failed to initialize!\n");
 	}
 	else
 	{
-		cout << "INITIALIZED" << endl;
+		cout << "INITIALIZED: " << AssetManager::GetAppPath() << endl;
 		Terrain.SetFile(AssetManager::GetAppPath() + "../../data/drycreek.tif");
 		Terrain.setup();
 		//Main loop flag
@@ -152,7 +145,7 @@ int main(int argc, char** argv)
 		SDL_StartTextInput();
 
 		//While application is running
-		while ( !quit )
+		while (!quit)
 		{
 			current = high_resolution_clock::now();
 			duration<double> time_span = duration_cast<duration<double>>(current - past);
@@ -164,28 +157,25 @@ int main(int argc, char** argv)
 			}
 			//past = current
 			//cout << time_span.count();
-			while ( SDL_PollEvent( &e ) != 0 )
+			while (SDL_PollEvent(&e) != 0)
 			{
 				HandleEvents(e, time_span.count());
 			}
 
-
-
-			// Update first
+			//Update first
 			update();
 
-			// Now render
+			//Now render
 			render();
 
 			auto error = glGetError();
-			if ( error != GL_NO_ERROR )
+			if (error != GL_NO_ERROR)
 			{
-				cout << "Error initializing OpenGL! " << gluErrorString( error )  << endl;
-
+				cout << "Error initializing OpenGL! " << gluErrorString(error) << endl;
 			}
 
 			//Update screen
-			SDL_GL_SwapWindow( gWindow );
+			SDL_GL_SwapWindow(gWindow);
 			past = current;
 		}
 
@@ -208,35 +198,35 @@ bool init()
 	bool success = true;
 
 	//Initialize SDL
-	if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
-		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
+		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
 		success = false;
 	}
 	else
 	{
 		//Use OpenGL 3.3 -- Make sure you have a graphics card that supports 3.3
-		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-		SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
-		SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
-		SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
-		if ( gWindow == NULL )
+		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+		if (gWindow == NULL)
 		{
-			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
+			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 			success = false;
 		}
 		else
 		{
 			//Create context
-			gContext = SDL_GL_CreateContext( gWindow );
-			if ( gContext == NULL )
+			gContext = SDL_GL_CreateContext(gWindow);
+			if (gContext == NULL)
 			{
-				printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
+				printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
 				success = false;
 			}
 			else
@@ -244,16 +234,15 @@ bool init()
 				auto t = glGetError();
 				cout << ErrorString(t) << endl;
 
-
 				//Use Vsync
-				if ( SDL_GL_SetSwapInterval( 1 ) < 0 )
+				if (SDL_GL_SetSwapInterval(1) < 0)
 				{
-					printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
+					printf("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
 				}
 				t = glGetError();
 				cout << ErrorString(t) << endl;
 
-				#if !defined(__APPLE__) && !defined(MACOSX)
+#if !defined(__APPLE__) && !defined(MACOSX)
 				cout << glewGetString(GLEW_VERSION) << endl;
 				glewExperimental = GL_TRUE;
 
@@ -264,14 +253,14 @@ bool init()
 					//std::cerr << "GLEW Error: " << glewGetErrorString(status) << "\n";
 					success = false;
 				}
-				#endif
-				
+#endif
+
 				t = glGetError();
 				cout << ErrorString(t) << endl;
 				//Initialize OpenGL
-				if ( !initGL() )
+				if (!initGL())
 				{
-					printf( "OUCH Unable to initialize OpenGL!\n" );
+					printf("OUCH Unable to initialize OpenGL!\n");
 					success = false;
 				}
 
@@ -294,13 +283,12 @@ bool initGL()
 	GLenum error = GL_NO_ERROR;
 	bool success = true;
 	//Initialize clear color
-	glClearColor( 0.f, 0.f, 1.f, 1.f );
-
+	glClearColor(0.f, 0.f, 1.f, 1.f);
 
 	error = glGetError();
-	if ( error != GL_NO_ERROR )
+	if (error != GL_NO_ERROR)
 	{
-		printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
+		printf("Error initializing OpenGL! %s\n", gluErrorString(error));
 		success = false;
 	}
 
@@ -319,7 +307,7 @@ void render()
 	glm::mat4 view = Camera.getView();
 	glm::mat4 projection = Camera.getProjection();
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	glClearColor( 0.f, 0.f, 0.5f, 0.f );
+	glClearColor(0.f, 0.f, 0.5f, 0.f);
 	fr.render(view, projection);
 
 	GBuffer::BindForWriting();
@@ -330,7 +318,7 @@ void render()
 	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
-	glClearColor( 0.f, 0.f, 0.5f, 0.f );
+	glClearColor(0.f, 0.f, 0.5f, 0.f);
 	Terrain.render(view, projection);
 	GBuffer::DefaultBuffer();
 	//glDisable(GL_CULL_FACE);
@@ -341,7 +329,7 @@ void render()
 void close()
 {
 	//Destroy window
-	SDL_DestroyWindow( gWindow );
+	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 
 	//Quit SDL subsystems
@@ -351,25 +339,25 @@ void close()
 void HandleEvents(SDL_Event e, float dt)
 {
 	//User requests quit
-	if ( e.type == SDL_QUIT )
+	if (e.type == SDL_QUIT)
 	{
 		quit = true;
 	}
 	else if (e.type == SDL_KEYDOWN)
 	{
-		// handle key down events here
+		//handle key down events here
 		if (e.key.keysym.sym == SDLK_ESCAPE)
 		{
 			quit = true;
 		}
 
-		// rotate camera left
+		//rotate camera left
 		if (e.key.keysym.sym == SDLK_q)
 		{
 			Camera.rotateX(1 * dt);
 		}
 
-		// rotate camera right
+		//rotate camera right
 		if (e.key.keysym.sym == SDLK_e)
 		{
 			Camera.rotateX(-1 * dt);
@@ -377,24 +365,24 @@ void HandleEvents(SDL_Event e, float dt)
 
 		//Camera.applyRotation();
 
-		// Move left
+		//Move left
 		if (e.key.keysym.sym == SDLK_a)
 		{
 			Camera.strafe(10 * dt);
 		}
-		// move back
+		//move back
 		if (e.key.keysym.sym == SDLK_s)
 		{
 			Camera.translate(-10 * dt);
 		}
 
-		// move right
+		//move right
 		if (e.key.keysym.sym == SDLK_d)
 		{
 			Camera.strafe(-10 * dt);
 		}
 
-		// move forward
+		//move forward
 		if (e.key.keysym.sym == SDLK_w)
 		{
 			Camera.translate(10 * dt);
@@ -402,11 +390,11 @@ void HandleEvents(SDL_Event e, float dt)
 
 		if (e.key.keysym.sym == SDLK_y)
 		{
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 		if (e.key.keysym.sym == SDLK_u)
 		{
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 		if (e.key.keysym.sym == SDLK_z)
 		{
@@ -443,7 +431,7 @@ void HandleEvents(SDL_Event e, float dt)
 		}
 		if (e.key.keysym.sym == SDLK_q || e.key.keysym.sym == SDLK_e)
 		{
-			// Reset Horizontal rotation
+			//Reset Horizontal rotation
 			Camera.resetHorizontalRotation();
 		}
 		if (e.key.keysym.sym == SDLK_z || e.key.keysym.sym == SDLK_x)

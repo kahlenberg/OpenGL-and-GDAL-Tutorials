@@ -16,12 +16,7 @@ bool shader::open(std::string filename)
    name = filename;
    std::string filestring (std::istreambuf_iterator<char>(std::ifstream(filename).rdbuf()), std::istreambuf_iterator<char>());
    std::cout << "SHADER: "<< filename << std::endl;
-   std::string str = filestring;
-   char writable[ str.size() + 1];
-   std::copy(str.begin(), str.end(), writable);
-   writable[str.size()] = '\0'; // don't forget the terminating 0
-
-   const char* shader = &writable[0];
+   const char* shader = filestring.c_str();
    glShaderSource(source, 1, &shader, NULL);
    glGetShaderiv(source, GL_SHADER_SOURCE_LENGTH, &l2);
    std::cout << "Length of shader" << l2 << std::endl;

@@ -25,7 +25,7 @@ public:
 
 private:
 	
-	OGRDataSource* ds;
+	GDALDataset* ds;
 	OGRSpatialReference* sr;
 	buffer vbo_geometry;
 	buffer elements;
